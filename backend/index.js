@@ -2,7 +2,7 @@
 import express from "express";
 import dotenv from "dotenv";
 dotenv.config({
-    path: "./config.env",
+    path: "./.env",
 });
 import Router from "./src/Routes/Routes.js";
 import db from "./src/Config/ConnectDB.js";

@@ -1,178 +1,280 @@
-import React, { useEffect, useState } from 'react';
-
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useQuill } from "react-quilljs";
+import axios from "axios";
+import { SuccessToast, ErrorToast } from "../componants/HandleNotification";
+import { useNavigate, useParams } from "react-router-dom";
+import { GETBLOG, UPDATEBLOG } from "../constant";
 
 const UpdateBlog = () => {
-    const [Status, setStatus] = useState("Draft");
-    const [title, setTitle] = useState("");
-    const [Content, setContent] = useState("");
-    const [image, setImage] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(null);
-    const categories = ["Tech", "LifeStyle", "Finance"];
-    const { id } = useParams();
-    const Navigate = useNavigate();
+  const navigate = useNavigate();
+  const { id } = useParams(); // Get the blog ID from the URL parameters
+  const [blogTitle, setBlogTitle] = useState("");
+  const [blogStatus, setBlogStatus] = useState("Draft");
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [image, setImage] = useState(null);
+  const [blogContent, setBlogContent] = useState("");
+  const token = localStorage.getItem("authToken");
+  const { quill, quillRef } = useQuill();
+  const user = localStorage.getItem("user");
+  const userId = JSON.parse(user)?.id;
 
-    const Handleimagechange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setImage(file);
+
+  const categories = ["Tech", "Lifestyle", "Finance"];
+
+  useEffect(() => {
+    if (quill) {
+      quill.on("text-change", () => {
+        setBlogContent(quill.root.innerHTML); // Update blogContent state on text change
+      });
+    }
+  }, [quill]);
+
+  useEffect(() => {
+    const fetchBlogData = async () => {
+      try {
+        const response = await axios.get(`${GETBLOG}${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.status === 200) {
+          const blogData = response.data.data; // Assuming the API returns the blog data in this format
+          setBlogTitle(blogData.title);
+          setBlogContent(blogData.content);
+          setImage(blogData.imgurl); // Assuming the image is in base64 format
+          setSelectedCategory(blogData.category);
+          setBlogStatus(blogData.status);
+
+          if (quill) {
+            quill.clipboard.dangerouslyPasteHTML(blogData.content); // Set initial content in the editor
+          }
         }
+      } catch (error) {
+        console.error("Error fetching blog data:", error);
+        ErrorToast("Error fetching blog data: " + error.message);
+      }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const result = await axios.get(`http://localhost:8000/api/GetBlog/${id}`);
-            const data = result.data.data;
-            setContent(data.content);
-            setTitle(data.title);
-            setStatus(data.status);
-            setImage(data.imgurl);
-            setSelectedCategory(data.category);
-        };
+    fetchBlogData(); // Fetch blog data when the component mounts
+  }, [id, quill, token]);
 
-        fetchData();
-    }, [id]);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImage(base64String);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
-    const HandleSubmit = async (status) => {
-        if (!title || !selectedCategory || !Content || !image) {
-            return window.alert("Please fill out all fields");
-        } else {
-            const data = new FormData();
-            data.append('title', title);
-            data.append("content", Content);
-            data.append("status", Status);
-            data.append("category", selectedCategory);
-            if (image) {
-                data.append("image", image);
-            }
-            try {
-                await axios.put(`http://localhost:8000/api/UpdateBlog/${id}`, data, {
-                    headers: {
-                        "Content-Type": "multipart/form-data",
-                    },
+  const handleSubmit = async (status) => {
+    if (!blogTitle || !blogContent || !image || !selectedCategory) {
+      return ErrorToast("Please fill out all the required fields!");
+    }
 
-                });
-                alert("Blog updated successfully!");
-                Navigate("/Admin/Dashboard");
-            } catch (error) {
-                console.error("Error updating blog:", error);
-                alert("Failed to update the blog. Please try again.");
-            }
-        }
+    const payload = {
+      title: blogTitle,
+      content: blogContent,
+      status: status,
+      category: selectedCategory,
+      image: image,
+      author: userId,
     };
 
-    return (
-        <div className='p-6 min-h-screen' style={{ background: "#e0e0e0", boxShadow: "inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff" }}>
-            <h1 className='text-center font-bold text-2xl mb-8' style={{ textShadow: "2px 2px 4px #d1d1d1" }}>Update Blog</h1>
+    try {
+      const response = await axios.put(`${UPDATEBLOG}${id}`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-            <div className='grid grid-cols-4 gap-4'>
-                <div className='col-span-3 p-6 rounded-lg' style={{ background: "#e0e0e0", boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff" }}>
-                    <label className='text-lg font-medium mb-2 block' style={{ textShadow: "1px 1px 3px #d1d1d1" }}>Blog Title</label>
-                    <input
-                        type="text"
-                        placeholder='Enter Blog Title Here'
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        className='w-full p-3 rounded-lg mb-4'
-                        style={{ background: "#f0f0f0", boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff" }}
-                    />
+      if (response.status === 200 || response.status === 201) {
+        SuccessToast(`Blog has been successfully ${status.toLowerCase()}!`);
+        navigate("/Admin/Dashboard"); // Redirect to the dashboard after successful submission
+      } else {
+        ErrorToast(response.data.message || "An error occurred.");
+      }
+    } catch (error) {
+      console.error("Request Failed:", error);
+      ErrorToast("Failed to connect to the server.");
+    }
+  };
 
-                    <label className='block font-medium mb-2 text-lg' style={{ textShadow: "1px 1px 3px #d1d1d1" }}>Blog Content</label>
-                    <div
-                        value={Content}
-                        onChange={(content) => setContent(content)}
-                        style={{ height: "300px", background: "#f0f0f0", boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff" }}
-                        className='mb-4 rounded-lg'
-                    />
-                </div>
+  return (
+    <div
+      className="p-6 bg-gray-200 min-h-screen"
+      style={{ boxShadow: "12px 12px 24px #bebebe, -12px -12px 24px #ffffff" }}
+    >
+      <h1
+        className="text-2xl font-bold text-center mb-8"
+        style={{ textShadow: "2px 2px 4px #d1d1d1" }}
+      >
+        Update Blog
+      </h1>
+      <div className="grid grid-cols-4 gap-4">
+        <div
+          className="col-span-3 bg-gray-200 p-6 rounded-lg"
+          style={{
+            boxShadow: "inset 8px 8px 16px #bebebe, inset -8px -8px 16px #ffffff",
+          }}
+        >
+          <label
+            className="block text-lg font-medium mb-2"
+            style={{ textShadow: "1px 1px 3px #d1d1d1" }}
+          >
+            Blog Title
+          </label>
+          <input
+            type="text"
+            placeholder="Enter your blog title"
+            value={blogTitle}
+            onChange={(e) => setBlogTitle(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg p-2 mb-4"
+            style={{
+              background: "#f0f0f0",
+              boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff",
+            }}
+          />
 
-                <div className='col-span-1 p-6 rounded-lg' style={{ background: "#e0e0e0", boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff" }}>
-                    <div className="mb-4">
-                        <h3 className="text-lg font-medium mb-2" style={{ textShadow: "1px 1px 3px #d1d1d1" }}>Status</h3>
-                        <p className="text-lg p-2 rounded-lg" style={{ background: "#f0f0f0", boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff" }}>{Status}</p>
-                    </div>
-
-                    <div className='flex gap-4 mb-4'>
-                        <button
-                            className='px-4 py-2 rounded-lg'
-                            style={{
-                                color: "#fff",
-                                background: "linear-gradient(145deg, #cacaca, #f0f0f0)",
-                                boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
-                                transition: "0.3s",
-                            }}
-                            onClick={() => HandleSubmit("Published")}
-                        >
-                            Publish
-                        </button>
-
-                        <button
-                            className='px-4 py-2 rounded-lg'
-                            style={{
-                                color: "#fff",
-                                background: "linear-gradient(145deg, #cacaca, #f0f0f0)",
-                                boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
-                                transition: "0.3s",
-                            }}
-                            onClick={() => HandleSubmit("Draft")}
-                        >
-                            Save as Draft
-                        </button>
-                    </div>
-
-                    <label className='block text-lg font-medium mb-2' style={{ textShadow: "1px 1px 3px #d1d1d1" }}>Blog Image</label>
-                    <input
-                        type="file"
-                        className='hidden'
-                        accept='image/*'
-                        id='upload-image'
-                        onChange={Handleimagechange}
-                    />
-                    <label htmlFor="upload-image" className='cursor-pointer mb-4'>
-                        <div className='h-32 flex items-center justify-center rounded-lg overflow-hidden border' style={{ background: "#f0f0f0", boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff" }}>
-                            {image ? (
-                                typeof image === 'string' ? (
-                                    <img
-                                        src={image}
-                                        alt="Preview"
-                                        className="h-full w-full object-cover"
-                                    />
-                                ) : (
-                                    <img
-                                        src={URL.createObjectURL(image)}
-                                        alt="Preview"
-                                        className="h-full w-full object-cover"
-                                    />
-                                )
-                            ) : (
-                                <p className="text-sm text-gray-500">Click to upload image</p>
-                            )}
-                        </div>
-                    </label>
-
-                    <div>
-                        <h3 className='text-lg font-medium mb-2' style={{ textShadow: "1px 1px 3px #d1d1d1" }}>Select Category</h3>
-                        <div className='flex flex-col gap-2'>
-                            {categories.map((category, index) => (
-                                <label key={index}>
-                                    <input
-                                        type="radio"
-                                        name='category'
-                                        value={category}
-                                        checked={selectedCategory === category}
-                                        onChange={() => setSelectedCategory(category)}
-                                        className='form-radio mr-2'
-                                    />
-                                    {category}
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <label
+            className="block text-lg font-medium mb-2"
+            style={{ textShadow: "1px 1px 3px #d1d1d1" }}
+          >
+            Blog Content
+          </label>
+          <div
+            ref={quillRef}
+            style={{
+              height: "300px",
+              background: "#f0f0f0",
+              boxShadow: "inset 4px 4px 8px #d1d1d1, inset -4px -4px 8px #ffffff",
+            }}
+          />
         </div>
-    );
+
+        <div
+          className="col-span-1 bg-gray-200 p-6 rounded-lg"
+          style={{
+            boxShadow: "inset 8px 8px 16px #bebebe, inset -8px -8px 16px #ffffff",
+          }}
+        >
+          <div className="mb-4">
+            <h3
+              className="text-lg font-medium mb-2"
+              style={{ textShadow: "1px 1px 3px #d1d1d1" }}
+            >
+              Status
+            </h3>
+            <p
+              className="text-sm bg-gray-300 rounded-lg p-2"
+              style={{
+                boxShadow: "inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff",
+              }}
+            >
+              {blogStatus}
+            </p>
+          </div>
+          <div className="flex gap-4 mb-4">
+            <button
+              className="bg-green-500 text-white px-4 py-2 rounded-lg"
+              style={{
+                boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+              }}
+              onClick={() => handleSubmit("Published")}
+            >
+              Publish
+            </button>
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              style={{
+                boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+              }}
+              onClick={() => handleSubmit("Draft")}
+            >
+              Save as Draft
+            </button>
+          </div>
+
+          <hr
+            className="my-4"
+            style={{
+              boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+            }}
+          />
+          <div className="mb-4">
+            <label
+              className="block text-lg font-medium mb-2"
+              style={{ textShadow: "1px 1px 3px #d1d1d1" }}
+            >
+              Blog Image
+            </label>
+            <input
+              type="file"
+              accept="image/*"
+              id="image-upload"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <label htmlFor="image-upload" className="cursor-pointer">
+              <div
+                className="bg-gray-200 h-32 flex items-center justify-center rounded-lg overflow-hidden border"
+                style={{
+                  boxShadow: "inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff",
+                }}
+              >
+                {image ? (
+                  <img
+                    src={image}
+                    alt="Preview"
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500">Click to upload image</p>
+                )}
+              </div>
+            </label>
+          </div>
+          <hr
+            className="my-4"
+            style={{
+              boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+            }}
+          />
+          <div>
+            <h3
+              className="text-lg font-medium mb-2"
+              style={{ textShadow: "1px 1px 3px #d1d1d1" }}
+            >
+              Category
+            </h3>
+            <div className="flex flex-col gap-2">
+              {categories.map((category, index) => (
+                <label key={index} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="category"
+                    value={category}
+                    checked={selectedCategory === category}
+                    onChange={() => setSelectedCategory(category)}
+                    className="form-radio"
+                    style={{
+                      boxShadow: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+                    }}
+                  />
+                  {category}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default UpdateBlog;

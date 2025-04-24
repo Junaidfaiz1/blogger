@@ -10,8 +10,7 @@ import fs from "fs"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import nodemailer from "nodemailer";
-import mongoose from "mongoose";
-import fileUpload from "express-fileupload";
+
 
 const verificationCodes = new Map();
  
@@ -26,9 +25,10 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const SendVerificationCode = async (req, res, next) => {
+export const SendVerificationCode = async (req, res) => {
   try {
     const { email, role } = req.body;
+    console.log(email, role)
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
     }
@@ -114,8 +114,6 @@ export const Login = async (req, res, next) => {
         message: "User not Registered. Please SignUp",
       });
     }
-
-   
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -151,37 +149,32 @@ export const Login = async (req, res, next) => {
   }
 };
 
-export const Test = async (req, res, next )=>{
-  res.status(200).json({
-    message: "Hellow world"
-  })
-}
-
 
   
 
 export const CreateBlog = async (req, res) => {
   try {
-    const { title, content, category, author, status } = req.body;
-    if (!req.file) {
-      return res.status(400).json({
-        message: "Image required",
-        status: 400,
-      });
-    }   
-    const filePath = req.file.path;
-   const result = await cloudinary.uploader.upload(filePath,{
-      folder: "Blog"
-    });
+    const { title, content, category, author, status, image } = req.body;
+   
+   
+  
+   if (!title || typeof title !== "string") {
+      return res.status(400).json({ message: "Title is required and must be a string" });
+   }
+   const result = await cloudinary.uploader.upload(image, {
+      folder: "blog",
+      public_id: slugify(title, { lower: true, strict: true }),
+      allowed_formats: ["jpeg", "jpg", "png"],
+   });
     const blog = new Blog({
       title,
       content,
       category,
-      author,
+      author: req.user.id,
       status,
       imgurl: result.secure_url,
     });
-    fs.unlinkSync(filePath);
+   
     
     await blog.save();  
     return res.status(201).json({
@@ -197,22 +190,164 @@ export const CreateBlog = async (req, res) => {
 };
 
 
-export const GetAllBlog = async (req, res, next) => {
+export const GetWriterBlogs = async (req, res) => {
     try {
-        const blog = await Blog.find();
-        return SuccessResponse(res, blog, "Blog retrieved successfully");
+        const blog = await Blog.find({author: req.user.id}).select("title status");
+        
+        if (!blog) {
+            return res.status(404).json({
+                message: "No blogs found",
+            });
+        }
+        if (blog.length === 0) {
+            return res.status(200).json({
+                message: "No blogs available",
+                data: blog,
+            });
+        }
+        return res.status(200).json({
+            message: "Blogs retrieved successfully",
+            data: blog,
+        });
     } catch (error) {
-        next(new ApiError(500, "Server is not responding"));
+        return res.status(500).json({
+            message: "Error retrieving blogs: " + error.message,
+        });
     }
 };
+
+
+export const DeleteBlog = async (req, res, next) => {
+  try {
+
+      const blog = await Blog.findById({_id: req.params.id, author: req.user.id});
+      if (!blog) {
+          throw res.status(500).json({
+              message: "Blog not found"
+          });
+      }
+
+    
+      const publicId = blog.imgurl.split("/").slice(-2).join("/").split(".")[0]; // Extract the public_id
+      
+      await cloudinary.uploader.destroy(publicId, (error) => {
+          if (error) {
+              console.error("Error deleting image from Cloudinary: ", error);
+          }
+      });
+
+      // Delete the blog from the database
+      await blog.deleteOne();
+      return SuccessResponse(res, null, "Blog deleted successfully");
+  } catch (error) {
+      next(res.status(500).json({
+          message: "Error deleting blog: " + error.message
+      }));
+  }
+};
+
+
+
+export const UpdateBlog = async (req, res) => {
+  try {
+    const blogId = req.params.id;
+    let image_Url;
+    const { title, content, category, author, status,image } = req.body;
+
+    // Check if the blog exists
+    const blog = await Blog.findById({_id: blogId,author: req.user.id});
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    if( blog.imgurl === image){
+      image_Url = image
+    }else{
+
+
+    const publicId = blog.imgurl.split("/").slice(-2).join("/").split(".")[0]; // Extract the public_id
+      
+    await cloudinary.uploader.destroy(publicId, (error) => {
+        if (error) {
+            console.error("Error deleting image from Cloudinary: ", error);
+        }
+    });
+
+      // Generate a slugified name for the new image
+      const img_name = slugify(title || blog.title, { lower: true, strict: true });
+
+      // Upload the new image to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(image, {
+        folder: "blog",
+        public_id: img_name,
+        allowed_formats: ["jpeg", "jpg", "png"],
+      });
+      image_Url = uploadResult.secure_url; // Update the image URL with the new one
+
+    }
+    const payload = { 
+      title,
+      content,
+      category,
+      imgurl: image_Url,
+      author,
+      status,
+      updatedAt: new Date(),
+    }
+
+    // Update the blog document
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      blogId, payload,
+      { new: true, runValidators: true }
+    );
+
+    res.status(200).json({
+      message: "Blog updated successfully",
+      data: updatedBlog,
+    });
+
+  
+    }catch (error) {
+    console.error("Error updating blog:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 
 export const GetBlogById = async (req, res, next) => {
     try {
         const blog = await Blog.findById(req.params.id);
         if (!blog) {
-            return next(new ApiError(404, "Blog not found"));
+            return res.status(404).json({
+                message: "Blog not found",
+            });
         }
-        return SuccessResponse(res, blog, "Blog retrieved by ID successfully");
+        const author = await User.findById(blog.author);
+        if (!author) {
+            return res.status(404).json({
+                message: "Author not found",
+            });
+        }
+        const authorName = author.name;
+        const authorProfilePicture = author.profilePicture;
+       
+        const data = {
+            title: blog.title,
+            content: blog.content,
+            category: blog.category,
+            imgurl: blog.imgurl,
+            authorName: authorName,
+            authorProfilePicture: authorProfilePicture,
+            status: blog.status,
+            createdAt: blog.createdAt,
+            updatedAt: blog.updatedAt,
+        }
+
+
+        return res.status(200).json({
+            message: "Blog retrieved successfully",
+            data: data,
+        });
     } catch (error) {
         next(res.status(500).json({
             message: "error to responding server"
@@ -220,89 +355,8 @@ export const GetBlogById = async (req, res, next) => {
     }
 };
 
-export const UpdateBlog = async (req, res) => {
-    try {
-      const blogId = req.params.id;
-      const { title, content, category, imgurl, author, status } = req.body;
-  
-      // Check if the blog exists
-      const blog = await Blog.findById(blogId);
-      if (!blog) {
-        return res.status(404).json({ message: "Blog not found" });
-      }
-  
-      let imageUrl = imgurl;
-  
-      // Handle file upload for image
-      if (req.file) {
-        // Delete old image from Cloudinary if it exists
-        if (blog.imgurl) {
-          const existingPublicId = blog.imgurl.split("/").pop().split(".")[0]; // Extract public_id
-          await cloudinary.uploader.destroy(existingPublicId);
-        }
-  
-        // Generate a slugified name for the new image
-        const img_name = slugify(title || blog.title, { lower: true, strict: true });
-  
-        // Upload the new image to Cloudinary
-        const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-          folder: "blog",
-          public_id: img_name,
-          allowed_formats: ["jpeg", "jpg", "png"],
-        });
-  
-        // Delete the local file
-        await fs.unlink(req.file.path);
-  
-        // Update the imageUrl
-        imageUrl = uploadResult.secure_url;
-      }
-      const updateBlog = { title,
-        content,
-        category,
-        imgurl: imageUrl,
-        author,
-        status,}
-  
-      // Update the blog document
-      const updatedBlog = await Blog.findByIdAndUpdate(
-        blogId, updateBlog,
-        { new: true, runValidators: true }
-      );
-  
-      res.status(200).json(updatedBlog);
-    } catch (error) {
-      console.error("Error updating blog:", error);
-      res.status(500).json({ message: "Server Error" });
-    }
-  };
 
-export const DeleteBlog = async (req, res, next) => {
-    try {
-        const blog = await Blog.findById(req.params.id);
-        if (!blog) {
-            throw res.status(500).json({
-                message: "Blog not found"
-            });
-        }
 
-        // Remove the image from Cloudinary
-        const publicId = blog.imgurl.split("/").slice(-2).join("/").split(".")[0]; // Extract the public_id
-        await cloudinary.uploader.destroy(publicId, (error, result) => {
-            if (error) {
-                console.error("Error deleting image from Cloudinary: ", error);
-            }
-        });
-
-        // Delete the blog from the database
-        await blog.deleteOne();
-        return SuccessResponse(res, null, "Blog deleted successfully");
-    } catch (error) {
-        next(res.status(500).json({
-            message: "Error deleting blog: " + error.message
-        }));
-    }
-};
 
 
 export const GetBlogByCategory = async (req, res, next) => {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from '../Context/AuthContext';
 import { ErrorToast, SuccessToast } from '../componants/HandleNotification';
+import { LOGIN } from '../constant';
 
 
 function LoginPage() {
@@ -14,7 +15,7 @@ function LoginPage() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:8000/api/login/', {
+      const response = await axios.post(LOGIN, {
         email,
         password,
       });

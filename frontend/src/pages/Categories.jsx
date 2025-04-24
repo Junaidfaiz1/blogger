@@ -1,38 +1,26 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-const blogs = [
-  {
-    id: 1,
-    title: "First Blog Title",
-    description: "This is a short description of the first blog.",
-    buttonLabel: "Read Me",
-    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7WMhXwy-kuSo-JSwo1HUhRXytpyJg-hcmPQ&s"
-  },
-  {
-    id: 2,
-    title: "Second Blog Title",
-    description: "This is a short description of the second blog.",
-    buttonLabel: "Read Me",
-    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCJQoJz43Wn0GDoejJ-khBPD8AfG6yA9sBVw&s"
-  },
-  {
-    id: 3,
-    title: "Third Blog Title",
-    description: "This is a short description of the third blog.",
-    buttonLabel: "Read Me",
-    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7WMhXwy-kuSo-JSwo1HUhRXytpyJg-hcmPQ&s"
-  },
-  {
-    id: 4,
-    title: "Fourth Blog Title",
-    description: "This is a short description of the fourth blog.",
-    buttonLabel: "Read Me",
-    imageUrl: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT7WMhXwy-kuSo-JSwo1HUhRXytpyJg-hcmPQ&s"
-  },
-];
+
 
 const Categories = () => {
+  const [blogs, setBlogs] = React.useState([])
+
+  const fetchBlogs = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/GetBlogByCategory', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+      setBlogs(data);
+    } catch (error) {
+      console.error('Error fetching blogs:', error);
+    }
+  };
+
   return (
     <div className="p-8 space-y-12">
       {/* Category Heading */}

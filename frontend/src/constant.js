@@ -1,0 +1,9 @@
+const BASE_URL = 'http://localhost:8000/api';
+export const WRITEBLOG= `${BASE_URL}/createblog`;
+export const GETWRITERBLOGS= `${BASE_URL}/GetWriterBlogs`;
+export const DELETEBLOG= `${BASE_URL}/DeleteBlog/`;
+export const LOGIN= `${BASE_URL}/login`;
+export const SIGNUP= `${BASE_URL}/signup`;
+export const VARIFICATIONCODE= `${BASE_URL}/varificationcode`;
+export const GETBLOG= `${BASE_URL}/GetBlog/`;
+export const UPDATEBLOG = `${BASE_URL}/UpdateBlog/`;

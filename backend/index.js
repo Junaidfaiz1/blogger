@@ -33,13 +33,13 @@ const corsOptions = {
     }
 }
 
-app.use(express.json());
 app.use(cors(corsOptions));
+app.use(express.json());
 
 
 db();
 app.use("/api",Router)
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 
 app.listen(port, () => {
     console.log("Server is listening on port " + port);

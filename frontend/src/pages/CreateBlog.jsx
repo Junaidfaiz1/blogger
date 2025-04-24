@@ -2,7 +2,7 @@ import React, {  useState, useEffect } from "react";
 import { useQuill } from 'react-quilljs';
 import axios from "axios";
 import { SuccessToast, ErrorToast } from "../componants/HandleNotification";
-
+import { WRITEBLOG } from "../constant";
 
 const CreateBlog = () => {
   const [blogTitle, setBlogTitle] = useState("");
@@ -13,12 +13,11 @@ const CreateBlog = () => {
   const token = localStorage.getItem("authToken")
   const { quill, quillRef } = useQuill();
   const user = localStorage.getItem("user");
-  const userId =JSON.parse(user).id;
+  const userId =JSON.parse(user)?.id;
+  
   useEffect(() => {
     if (quill) {
-      quill.on('text-change', (delta, oldDelta, source) => {
-        
-        console.log(quill.root.innerHTML); 
+      quill.on('text-change', () => {
         setBlogContent(quill.root.innerHTML);
       });
     }
@@ -30,9 +29,17 @@ const CreateBlog = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setImage(base64String);
+      };
+      reader.readAsDataURL(file);
     }
   };
+ 
+
+
 
 
   const handleSubmit = async (status) => {
@@ -40,19 +47,19 @@ const CreateBlog = () => {
       return ErrorToast("Please fill out all the required fields!");
     }
 
-    const formData = new FormData();
-    formData.append("title", blogTitle);
-    formData.append("content", blogContent);
-    formData.append("category", selectedCategory);
-    formData.append("status", status);
-    formData.append("image", image);
-    formData.append("author", userId)
-    console.log(formData);
+   const Payload = {
+      title: blogTitle,
+      content: blogContent,
+      status: status,
+      category: selectedCategory,
+      image: image,
+      user: userId
+  
+   };
     
     try {
-      const response = await axios.post("http://localhost:8000/api/createblog/", formData, {
+      const response = await axios.post(WRITEBLOG, Payload, {
         headers: {
-          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`
         },
       });
@@ -133,7 +140,7 @@ const CreateBlog = () => {
               <div className="bg-gray-200 h-32 flex items-center justify-center rounded-lg overflow-hidden border" style={{ boxShadow: "inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff" }}>
                 {image ? (
                   <img
-                    src={URL.createObjectURL(image)}
+                    src={image}
                     alt="Preview"
                     className="h-full w-full object-cover"
                   />

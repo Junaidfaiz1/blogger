@@ -1,22 +1,24 @@
 import express from "express";
 const Router = express.Router();
 import authenticateUser from "../Middleware/Authuser.js";
-import { CreateBlog, GetAllBlog, GetBlogById, UpdateBlog, DeleteBlog, 
-    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, Test} from "../Controller/Blog.Controller.js";
-import authRoles from "../Middleware/authrole.js";
-import upload from "../Middleware/Upload.js";
+import { CreateBlog, GetWriterBlogs, GetBlogById, UpdateBlog, DeleteBlog, 
+    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login} from "../Controller/Blog.Controller.js";
 
-Router.post("/createblog/",upload.single("image"), CreateBlog);
-Router.get("/AllBlog/", GetAllBlog);
+
+
+
+Router.post("/createblog",authenticateUser, CreateBlog)
+Router.get("/GetWriterBlogs",authenticateUser, GetWriterBlogs);
+Router.delete("/DeleteBlog/:id",authenticateUser, DeleteBlog);
+Router.put("/UpdateBlog/:id",authenticateUser, UpdateBlog);
 Router.get("/GetBlog/:id", GetBlogById);
-Router.put("/UpdateBlog/:id", UpdateBlog);
-Router.delete("/DeleteBlog/:id", DeleteBlog);
 Router.get("GetBlogByCategory/:Category", GetBlogByCategory);
+
 Router.get("/categories", Categories);
 Router.post("/varificationcode", SendVerificationCode)
 Router.post("/signup", SignUp)
 Router.post("/login", Login)
-Router.get("/test",authenticateUser,authRoles("admin"), Test)
+
 
 
 

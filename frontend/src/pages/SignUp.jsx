@@ -3,6 +3,7 @@ import axios from 'axios';
 
 import { useNavigate } from 'react-router-dom';
 import { ErrorToast, SuccessToast } from '../componants/HandleNotification';
+import { SIGNUP, VARIFICATIONCODE } from '../constant';
 
 function SignupPage() {
   const [name, setName] = useState('');
@@ -51,7 +52,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/signup', {
+      const response = await axios.post(SIGNUP, {
         name: name,
         email: email,
         password: password,
@@ -92,7 +93,7 @@ function SignupPage() {
     }
 
     try {
-      const response = await axios.post('http://localhost:8000/api/varificationcode', {
+      const response = await axios.post(VARIFICATIONCODE, {
         email: email,
         role: role,
       });

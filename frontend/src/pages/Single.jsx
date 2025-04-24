@@ -1,12 +1,15 @@
 import axios from "axios";
 import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { GETBLOG } from "../constant";
+import { COMMENT, GETBLOG } from "../constant";
+import { ErrorToast, SuccessToast } from "../componants/HandleNotification";
 const RelatedPosts = lazy(() => import("../componants/RelatedPosts"));
 
 const Single = () => {
   const [data, setData] = useState([]);
   const { id } = useParams(); // Get the blog ID from the URL parameters
+  const [newMessage, setNewMessage] = useState("");
+
 
   // Memoize fetchData to prevent re-creation on every render
  // eslint-disable-next-line no-unused-vars
@@ -25,43 +28,36 @@ const Single = () => {
     day: "numeric",
   });
  
-
-
-
-
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  const [comments, setComments] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      avatar: "https://via.placeholder.com/50", // Placeholder image for user
-      message: "Great blog post! Very informative and well-written.",
-    },
-    {
-      id: 2,
-      name: "Jane Smith",
-      avatar: "https://via.placeholder.com/50", // Placeholder image for user
-      message: "Thanks for sharing this. It was very helpful!",
-    },
-  ]);
-
-  const [newMessage, setNewMessage] = useState("");
+  
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (newMessage.trim()) {
-      const newComment = {
-        id: comments.length + 1,
-        name: "Logged-in User", // Replace with logged-in user's name
-        avatar: "https://via.placeholder.com/50", // Replace with logged-in user's avatar
-        message: newMessage,
-      };
-      setComments([...comments, newComment]);
-      setNewMessage("");
+    const payload = {
+      message: newMessage,
+      blogId: id,
     }
+    axios.post(COMMENT, payload, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    })
+    .then((response) => {
+      if (response.status === 200) {
+        setNewMessage("");
+        SuccessToast("Comment submitted successfully!");
+      } else {
+        ErrorToast("Failed to submit comment.");
+      }
+    })
+    .catch((error) => {
+      ErrorToast("Error submitting comment: " + error.message);
+    });
+    
   };
 
   return (
@@ -88,7 +84,7 @@ const Single = () => {
             </div>
           </div>
 
-          {/* Article Content */}
+          {/* Blog Content */}
           <article className="mt-6 text-gray-800">
             <h1 className="text-3xl font-bold mb-4">{blog.title || "Untitled Blog"}</h1>
             <p
@@ -127,22 +123,22 @@ const Single = () => {
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Comments</h3>
               <div className="space-y-4">
-                {comments.map((comment) => (
+              
                   <div
-                    key={comment.id}
+                  
                     className="flex items-start p-4 bg-gray-200 rounded-lg shadow-inner"
                   >
                     <img
-                      src={comment.avatar}
-                      alt={comment.name}
+                     
+                     
                       className="w-12 h-12 rounded-full shadow-md"
                     />
                     <div className="ml-4">
-                      <h4 className="text-gray-800 font-medium">{comment.name}</h4>
-                      <p className="text-gray-600 text-sm">{comment.message}</p>
+                      <h4 className="text-gray-800 font-medium"></h4>
+                      <p className="text-gray-600 text-sm"></p>
                     </div>
                   </div>
-                ))}
+                
               </div>
             </div>
           </div>

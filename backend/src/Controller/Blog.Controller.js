@@ -403,36 +403,33 @@ export const GetHomeBlogs = async (req, res, next) => {
     }
   }
 
-export const GetBlogByAuthor = async (req, res, next) => {
-    try {
-        const author = req.params.author;
-        const blog = await Blog.find({ author, status: "Published" });
-        if (blog.length === 0) {
-            return next(new ApiError(404, `${author} has not published anything`));
-        }
-        return SuccessResponse(res, blog, `${author}'s blogs retrieved successfully`);
-    } catch (error) {
-        next(new ApiError(400, "Error retrieving this author's blogs"));
-    }
-};
 
-export const BlogComment = async (req, res, next) => {
+
+export const CommentOnBlog = async (req, res, next) => {
     try {
-        const blogId = req.params.id;
-        const { content, authorId } = req.body;
+        
+        const { message, blogId } = req.body;
+        console.log(message, blogId, req.user.id)
         const blog = await Blog.findById(blogId);
         if (!blog) {
-            return next(new ApiError(404, "Blog not found"));
+            return res.status(404).json({
+                message: "Blog not found",
+            });
         }
         const comment = new Comment({
-            content,
-            author: authorId,
+            content: message,
+            author: req.user.id,
             blog: blogId
         });
         await comment.save();
-        return SuccessResponse(res, comment, "New comment added to this blog");
+        return res.status(200).json({
+            message: "Comment added successfully",
+            data: comment,
+        });
     } catch (error) {
-        next(new ApiError(400, "Error commenting on blog"));
+       res.status(400).json({
+            message: "Error adding comment",
+        });
     }
 };
 

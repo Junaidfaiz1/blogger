@@ -2,7 +2,7 @@ import express from "express";
 const Router = express.Router();
 import authenticateUser from "../Middleware/Authuser.js";
 import { CreateBlog, GetWriterBlogs, GetBlogById, UpdateBlog, DeleteBlog, 
-    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs} from "../Controller/Blog.Controller.js";
+    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs, CommentOnBlog} from "../Controller/Blog.Controller.js";
 
 
 
@@ -14,11 +14,12 @@ Router.put("/UpdateBlog/:id",authenticateUser, UpdateBlog);
 Router.get("/GetBlog/:id", GetBlogById);
 Router.get("/GetBlogByCategory/:category", GetBlogByCategory);
 Router.get("/GetHomeBlogs", GetHomeBlogs);
-
-Router.get("/categories", Categories);
 Router.post("/varificationcode", SendVerificationCode)
 Router.post("/signup", SignUp)
 Router.post("/login", Login)
+Router.get("/categories", Categories);
+Router.post("/comment",authenticateUser, CommentOnBlog );
+
 
 
 

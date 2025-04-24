@@ -7,3 +7,5 @@ export const SIGNUP= `${BASE_URL}/signup`;
 export const VARIFICATIONCODE= `${BASE_URL}/varificationcode`;
 export const GETBLOG= `${BASE_URL}/GetBlog/`;
 export const UPDATEBLOG = `${BASE_URL}/UpdateBlog/`;
+export const GETBLOGBYCATEGORY = `${BASE_URL}/GetBlogByCategory/`;
+export const HomeBlogs = `${BASE_URL}/GetHomeBlogs`;

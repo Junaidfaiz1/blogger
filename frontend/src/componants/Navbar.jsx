@@ -35,13 +35,13 @@ function Navbar() {
         <div className="flex items-center space-x-6">
           {/* Categories */}
           <ul className="flex space-x-4 text-gray-800">
-            <Link to={"/:category"}>
+            <Link to={"/category/Tech"}>
               <li className="text-sm md:text-base hover:bg-gray-300 px-4 py-2 rounded-md shadow-md hover:shadow-lg cursor-pointer transition-all">Tech</li>
             </Link>
-            <Link to={"/:category"}>
+            <Link to={"/category/Lifestyle"}>
               <li className="text-sm md:text-base hover:bg-gray-300 px-4 py-2 rounded-md shadow-md hover:shadow-lg cursor-pointer transition-all">Lifestyle</li>
             </Link>
-            <Link to={"/:category"}>
+            <Link to={"/category/Finance"}>
               <li className="text-sm md:text-base hover:bg-gray-300 px-4 py-2 rounded-md shadow-md hover:shadow-lg cursor-pointer transition-all">Finance</li>
             </Link>
           </ul>

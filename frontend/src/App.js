@@ -15,7 +15,7 @@ const Single = lazy(()=> import('./pages/Single'))
 const Footer = lazy(()=> import('./componants/Footer'))
 const SignUp = lazy(()=> import('./pages/SignUp'))
 const Login = lazy(()=> (import('./pages/Login')))
-const ArticleByCategories = lazy(()=> import('./pages/Categories'))
+const BlogsByCategories = lazy(()=> import('./pages/Categories'))
 const Dashboard = lazy(()=>import('./pages/Dashboard'))
 const CreateBlog = lazy(()=>import('./pages/CreateBlog'))
 const UpdateBlog = lazy(()=> import ('./pages/UpdateBlog'));
@@ -63,8 +63,8 @@ const router = createBrowserRouter([
         element:<SignUp/>,
       },
       {
-        path: "/:category",
-        element:<ArticleByCategories/>,
+        path: "/category/:category",
+        element:<BlogsByCategories/>,
       },
       {
         path: "/AboutUs",

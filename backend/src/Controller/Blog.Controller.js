@@ -362,15 +362,46 @@ export const GetBlogById = async (req, res, next) => {
 export const GetBlogByCategory = async (req, res, next) => {
     try {
         const category = req.params.category;
-        const blog = await Blog.find({ category, status: "Published" });
+        console.log(category)
+        const blog = await Blog.find({ category, });
         if (blog.length === 0) {
-            return next(new ApiError(404, "Blog not found"));
+            return res.status(404).json({
+                message: `No blogs found in the ${category} category`,
+            });
         }
-        return SuccessResponse(res, blog, "Blog retrieved by category successfully");
+        return res.status(200).json({
+            message: `Blogs in the ${category} category retrieved successfully`,
+            data: blog,
+        });
     } catch (error) {
-        return next(new ApiError(400, "Error retrieving blog by category"));
+        return res.status(400).json({
+            message: "Error retrieving blogs by category",
+        });
     }
 };
+
+export const GetHomeBlogs = async (req, res, next) => {
+    try {
+        const blogs = await Blog.find({ status: "Published" })
+            .sort({ createdAt: -1 })
+            .limit(4)
+            .select("title content category imgurl ")
+            .exec();
+        if (blogs.length === 0) {
+            return res.status(404).json({
+                message: "No blogs found",
+            });
+        }
+        return res.status(200).json({
+            message: "Blogs retrieved successfully",
+            data: blogs,
+        });
+    } catch (error) {
+        return res.status(400).json({
+            message: "Error retrieving blogs",
+        });
+    }
+  }
 
 export const GetBlogByAuthor = async (req, res, next) => {
     try {

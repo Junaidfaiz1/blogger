@@ -1,16 +1,17 @@
 import axios from "axios";
 import React, { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { COMMENT, GETBLOG } from "../constant";
+import { BLOGCOMMENTS, COMMENT, GETBLOG } from "../constant";
 import { ErrorToast, SuccessToast } from "../componants/HandleNotification";
 const RelatedPosts = lazy(() => import("../componants/RelatedPosts"));
 
 const Single = () => {
   const [data, setData] = useState([]);
-  const { id } = useParams(); // Get the blog ID from the URL parameters
+  const { id } = useParams(); 
   const [newMessage, setNewMessage] = useState("");
-
-
+  const [comments, setComments] = useState([]);
+ 
+console.log(comments.flat())
   // Memoize fetchData to prevent re-creation on every render
  // eslint-disable-next-line no-unused-vars
   const fetchData = useCallback(async () => {
@@ -50,6 +51,7 @@ const Single = () => {
       if (response.status === 200) {
         setNewMessage("");
         SuccessToast("Comment submitted successfully!");
+        fetchcomments(); // Fetch comments again to update the list
       } else {
         ErrorToast("Failed to submit comment.");
       }
@@ -59,6 +61,25 @@ const Single = () => {
     });
     
   };
+
+  const fetchcomments = useCallback(async () => {
+    try {
+      const response = await axios.get(`${BLOGCOMMENTS}${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      setComments(response.data.data); // Assuming the API returns the comments in this format
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchcomments(); // Fetch comments when the component mounts
+    },[])  
+    
+ 
 
   return (
     <div className="container mx-auto p-8 flex flex-col lg:flex-row bg-gray-100 min-h-screen">
@@ -120,25 +141,27 @@ const Single = () => {
             </form>
 
             {/* Display Existing Comments */}
+            
             <div className="mt-6">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Comments</h3>
               <div className="space-y-4">
-              
+              {comments.map((comment, index)=>(
                   <div
-                  
+                  key={index}
                     className="flex items-start p-4 bg-gray-200 rounded-lg shadow-inner"
                   >
                     <img
                      
-                     
+                     src={comment.author.profilePicture || "https://via.placeholder.com/50"} // Use author's avatar or a placeholder
+                      alt="Commenter Profile"
                       className="w-12 h-12 rounded-full shadow-md"
                     />
                     <div className="ml-4">
-                      <h4 className="text-gray-800 font-medium"></h4>
-                      <p className="text-gray-600 text-sm"></p>
+                      <h4 className="text-gray-800 font-medium">{comment.author.name}</h4>
+                      <p className="text-gray-600 text-sm">{comment.content}</p>
                     </div>
                   </div>
-                
+                ))}
               </div>
             </div>
           </div>

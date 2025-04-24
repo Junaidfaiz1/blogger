@@ -362,7 +362,7 @@ export const GetBlogById = async (req, res, next) => {
 export const GetBlogByCategory = async (req, res, next) => {
     try {
         const category = req.params.category;
-        console.log(category)
+       
         const blog = await Blog.find({ category, });
         if (blog.length === 0) {
             return res.status(404).json({
@@ -405,11 +405,11 @@ export const GetHomeBlogs = async (req, res, next) => {
 
 
 
-export const CommentOnBlog = async (req, res, next) => {
+export const CommentOnBlog = async (req, res) => {
     try {
         
         const { message, blogId } = req.body;
-        console.log(message, blogId, req.user.id)
+       
         const blog = await Blog.findById(blogId);
         if (!blog) {
             return res.status(404).json({
@@ -433,16 +433,23 @@ export const CommentOnBlog = async (req, res, next) => {
     }
 };
 
-export const CommentOnSpecificBlog = async (req, res, next) => {
+export const CommentOnSpecificBlog = async (req, res) => {
     try {
         const blogId = req.params.id;
-        const comments = await Comment.find({ blog: blogId })
-            .populate('author', 'name profilePicture')
-            .exec();
-        
-        return SuccessResponse(res, comments, "Comments on the specific blog retrieved successfully");
+        const comments = await Comment.find({ blog: blogId }).populate("author", "name profilePicture").select("content");
+        if (!comments || comments.length === 0) {
+            return res.status(404).json({
+                message: "No comments found for this blog",
+            });
+        }
+        return res.status(200).json({
+            message: "Comments retrieved successfully",
+            data: comments,
+        });
     } catch (error) {
-        next(new ApiError(400, "Error retrieving comments for this blog"));
+       res.status(400).json({
+            message: "Error retrieving comments",
+        });
     }
 };
 

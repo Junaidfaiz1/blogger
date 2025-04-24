@@ -2,7 +2,7 @@ import express from "express";
 const Router = express.Router();
 import authenticateUser from "../Middleware/Authuser.js";
 import { CreateBlog, GetWriterBlogs, GetBlogById, UpdateBlog, DeleteBlog, 
-    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs, CommentOnBlog} from "../Controller/Blog.Controller.js";
+    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs, CommentOnBlog, CommentOnSpecificBlog} from "../Controller/Blog.Controller.js";
 
 
 
@@ -19,6 +19,7 @@ Router.post("/signup", SignUp)
 Router.post("/login", Login)
 Router.get("/categories", Categories);
 Router.post("/comment",authenticateUser, CommentOnBlog );
+Router.get("/showblogcomments/:id", CommentOnSpecificBlog); // Get comments for a specific blog
 
 
 

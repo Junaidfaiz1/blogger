@@ -11,3 +11,4 @@ export const GETBLOGBYCATEGORY = `${BASE_URL}/GetBlogByCategory/`;
 export const HomeBlogs = `${BASE_URL}/GetHomeBlogs`;
 export const COMMENT = `${BASE_URL}/comment`;
 export const BLOGCOMMENTS = `${BASE_URL}/showblogcomments/`;
+export const DELETECOMMENT = `${BASE_URL}/deletecomment/`;

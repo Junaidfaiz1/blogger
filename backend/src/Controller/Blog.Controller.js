@@ -467,3 +467,24 @@ export const Categories = async(req, res, next)=>{
         })
     }
 }
+
+export const DeleteComment = async (req, res) => {
+    try {
+       const id = req.body
+        const comment = await Comment.findBy({_id: id, author: req.user.id});
+        if (!comment) {
+            return res.status(404).json({
+                message: "Comment not found",
+            });
+        }
+        await comment.deleteOne();
+        return res.status(200).json({
+            message: "Comment deleted successfully",
+        });
+    }
+    catch (error) {
+        return res.status(400).json({
+            message: "Error deleting comment",
+        });
+    }
+}

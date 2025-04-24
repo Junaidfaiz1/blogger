@@ -20,6 +20,7 @@ Router.post("/login", Login)
 Router.get("/categories", Categories);
 Router.post("/comment",authenticateUser, CommentOnBlog );
 Router.get("/showblogcomments/:id", CommentOnSpecificBlog); // Get comments for a specific blog
+Router.delete("/deletecomment/:id",authenticateUser, CommentOnSpecificBlog); // Delete a specific comment
 
 
 

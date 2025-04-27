@@ -17,7 +17,7 @@ function Sidebar() {
       {/* Navigation Links */}
       <div className="flex flex-col w-full mt-6 space-y-3">
         <Link 
-          to="/Admin/profile/id"
+          to="/Admin/profile"
           className="block w-full px-4 py-2 text-center font-medium text-gray-700 rounded-xl bg-gray-200 shadow-md hover:bg-gray-300 hover:shadow-lg transition-all duration-300 ease-in-out"
         >
           Profile

@@ -515,8 +515,9 @@ export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         let img;
-        const { name, email, image } = req.body;
-        if (!name || !email || !image) {
+        const { name, image } = req.body;
+        console.log(req.body)
+        if (!name || !image) {
             return res.status(400).json({
                 message: "Name, email, and image are required",
             });
@@ -528,9 +529,7 @@ export const updateProfile = async (req, res) => {
             });
         }
         if (image) {
-          if(user.profilePicture === image){
-            img = image
-          }else{
+          if(user.profilePicture ==image){
             const publicId = user.profilePicture.split("/").slice(-2).join("/").split(".")[0]; // Extract the public_id
             await cloudinary.uploader.destroy(publicId, (error) => {
                 if (error) {
@@ -544,11 +543,12 @@ export const updateProfile = async (req, res) => {
                 allowed_formats: ["jpeg", "jpg", "png"],
             });
             img = uploadResult.secure_url;
+          }else{
+           img = image
         }
       }
         const updatedUser = {
             name,
-            email,
             profilePicture: img,
         };
         await User.updateOne({ _id: userId }, updatedUser, {

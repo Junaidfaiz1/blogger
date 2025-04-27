@@ -91,7 +91,7 @@ const router = createBrowserRouter([
       element: <UpdateBlog/>
     },
     {
-      path: "/Admin/profile/:id",
+      path: "/Admin/profile",
       element: <Profile/>
     }
   

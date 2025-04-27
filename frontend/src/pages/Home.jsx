@@ -48,7 +48,7 @@ const HomePage = () => {
           
           {/* Title, Description, and Button Section */}
           <div className="flex-1 p-4 flex flex-col justify-center md:items-center">
-            <h1 className="text-2xl font-semibold text-center md:text-left mb-2">
+            <h1 className="text-2xl font-semibold text-center  mb-2">
               {blog.title}
             </h1>
             <p d dangerouslySetInnerHTML={{
@@ -56,7 +56,7 @@ const HomePage = () => {
                     blog.content.length > 400
                       ? blog.content.substring(0, 400) + '...'
                       : blog.content,
-                }} className="text-gray-700 text-left">
+                }} className="text-gray-700 text-center">
               
             </p>
             <Link to={`/post/${blog._id}`} className="mt-4 px-4 py-2 border-2 border-teal-500  hover:bg-sea-green-500 hover:text-rose-600 rounded-full text-center transition-colors">

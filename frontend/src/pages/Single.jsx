@@ -77,7 +77,7 @@ console.log(comments.flat())
 
   useEffect(() => {
     fetchcomments(); // Fetch comments when the component mounts
-    },[])  
+    },[fetchcomments])  
     
  
 

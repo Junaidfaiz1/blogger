@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GETBLOGBYCATEGORY } from '../constant';
 import axios from 'axios';
@@ -6,10 +6,11 @@ import { useParams } from 'react-router-dom';
 
 const Categories = () => {
   const { category } = useParams();
+  console.log(category);
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true); // To handle loading state
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = useCallback( async () => {
     try {
       const response = await axios.get(`${GETBLOGBYCATEGORY}${category}`);
       if (response.status === 200) {
@@ -20,13 +21,13 @@ const Categories = () => {
     } catch (error) {
       console.error('Error fetching blogs:', error);
     } finally {
-      setLoading(false); // Set loading to false after fetching
+      setLoading(false); 
     }
-  };
+  },[category]);
 
   useEffect(() => {
     fetchBlogs();
-  }, [category]);
+  }, [fetchBlogs]);
 
   return (
     <div className="p-8 space-y-12">
@@ -57,7 +58,7 @@ const Categories = () => {
 
             {/* Title, Description, and Button Section */}
             <div className="flex-1 p-4 flex flex-col justify-center md:items-center">
-              <h1 className="text-2xl font-semibold text-center md:text-left mb-2">
+              <h1 className="text-2xl font-semibold text-center  mb-2">
                 {blog.title}
               </h1>
               <p
@@ -67,7 +68,7 @@ const Categories = () => {
                       ? blog.content.substring(0, 400) + '...'
                       : blog.content,
                 }}
-                className="text-gray-700 text-left"
+                className="text-gray-700 text-center md:w-screen-500"
               ></p>
               <Link
                 to={`/post/${blog._id}`}

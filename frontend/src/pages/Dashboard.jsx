@@ -69,7 +69,7 @@ function Dashboard() {
             >
               {/* Blog Title */}
               <div className="text-lg font-semibold text-gray-700 truncate">
-                {blog.title}
+                {blog.title.length > 40 ? `${blog.title.slice(0, 40)}...` : blog.title}
               </div>
               <div className="text-lg font-semibold text-gray-700 truncate">
                 {blog.status}

@@ -2,7 +2,7 @@ import express from "express";
 const Router = express.Router();
 import authenticateUser from "../Middleware/Authuser.js";
 import { CreateBlog, GetWriterBlogs, GetBlogById, UpdateBlog, DeleteBlog, 
-    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs, CommentOnBlog, CommentOnSpecificBlog} from "../Controller/Blog.Controller.js";
+    GetBlogByCategory, Categories, SendVerificationCode, SignUp, Login, GetHomeBlogs,updateProfile, CommentOnBlog,Profile, CommentOnSpecificBlog} from "../Controller/Blog.Controller.js";
 
 
 
@@ -21,8 +21,8 @@ Router.get("/categories", Categories);
 Router.post("/comment",authenticateUser, CommentOnBlog );
 Router.get("/showblogcomments/:id", CommentOnSpecificBlog); // Get comments for a specific blog
 Router.delete("/deletecomment/:id",authenticateUser, CommentOnSpecificBlog); // Delete a specific comment
-
-
+Router.get("/profile",authenticateUser, Profile); // Get user profile
+Router.put("/updateprofile",authenticateUser, updateProfile); // Update user profile
 
 
 

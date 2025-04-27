@@ -12,8 +12,7 @@ const CreateBlog = () => {
   const [blogContent, setBlogContent] = useState("");
   const token = localStorage.getItem("authToken")
   const { quill, quillRef } = useQuill();
-  const user = localStorage.getItem("user");
-  const userId =JSON.parse(user)?.id;
+  
   
   useEffect(() => {
     if (quill) {
@@ -53,10 +52,9 @@ const CreateBlog = () => {
       status: status,
       category: selectedCategory,
       image: image,
-      user: userId
-  
    };
-    
+
+ 
     try {
       const response = await axios.post(WRITEBLOG, Payload, {
         headers: {
@@ -64,16 +62,19 @@ const CreateBlog = () => {
         },
       });
 
-
       if (response.status === 200 || response.status === 201) {
         SuccessToast(`Blog has been successfully ${status.toLowerCase()}!`);
         resetForm();
-      } else {
-        ErrorToast(response.data);
       }
+      
     } catch (error) {
-      console.error("Request Failed:", error);
-      ErrorToast("Failed to connect to the server.");
+      console.error("Error creating blog:", );
+      console.log("Error creating blog:", error.response);
+      if (error.response && error.response.status === 413) {
+        ErrorToast("Image size is too large. Please upload a smaller image.");
+      } else {
+        ErrorToast("Failed to create blog. Please try again.");
+      }
     }
   };
 

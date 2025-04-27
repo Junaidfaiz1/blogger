@@ -154,7 +154,7 @@ export const Login = async (req, res, next) => {
 
 export const CreateBlog = async (req, res) => {
   try {
-    const { title, content, category, author, status, image } = req.body;
+    const { title, content, category, status, image } = req.body;
    
    
   
@@ -485,6 +485,84 @@ export const DeleteComment = async (req, res) => {
     catch (error) {
         return res.status(400).json({
             message: "Error deleting comment",
+        });
+    }
+}
+
+const Profile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+       
+        const user = await User.findById(userId).select("profilePicture name email role");
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+        return res.status(200).json({
+            message: "User profile retrieved successfully",
+            data: user,
+        });
+    }
+    catch (error) {
+        return res.status(400).json({
+            message: "Error retrieving user profile",
+        });
+    }
+}
+
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        let img;
+        const { name, email, image } = req.body;
+        if (!name || !email || !image) {
+            return res.status(400).json({
+                message: "Name, email, and image are required",
+            });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+        if (image) {
+          if(user.profilePicture === image){
+            img = image
+          }else{
+            const publicId = user.profilePicture.split("/").slice(-2).join("/").split(".")[0]; // Extract the public_id
+            await cloudinary.uploader.destroy(publicId, (error) => {
+                if (error) {
+                    console.error("Error deleting image from Cloudinary: ", error);
+                }
+            })
+        
+            const uploadResult = await cloudinary.uploader.upload(image, {
+                folder: "blog",
+                public_id: slugify(name, { lower: true, strict: true }),
+                allowed_formats: ["jpeg", "jpg", "png"],
+            });
+            img = uploadResult.secure_url;
+        }
+      }
+        const updatedUser = {
+            name,
+            email,
+            profilePicture: img,
+        };
+        await User.updateOne({ _id: userId }, updatedUser, {
+            new: true,
+            runValidators: true,
+        });
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            data: user,
+        });
+    } 
+    catch (error) {
+        return res.status(400).json({
+            message: "Error updating profile",
         });
     }
 }

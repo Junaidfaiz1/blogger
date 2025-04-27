@@ -489,7 +489,7 @@ export const DeleteComment = async (req, res) => {
     }
 }
 
-const Profile = async (req, res) => {
+export const Profile = async (req, res) => {
     try {
         const userId = req.user.id;
        
@@ -511,7 +511,7 @@ const Profile = async (req, res) => {
     }
 }
 
-const updateProfile = async (req, res) => {
+export const updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
         let img;

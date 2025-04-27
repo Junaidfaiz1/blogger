@@ -12,3 +12,5 @@ export const HomeBlogs = `${BASE_URL}/GetHomeBlogs`;
 export const COMMENT = `${BASE_URL}/comment`;
 export const BLOGCOMMENTS = `${BASE_URL}/showblogcomments/`;
 export const DELETECOMMENT = `${BASE_URL}/deletecomment/`;
+export const PROFILE = `${BASE_URL}/profile`;
+export const UPDATEPROFILE = `${BASE_URL}/updateprofile`;

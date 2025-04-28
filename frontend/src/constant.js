@@ -14,3 +14,4 @@ export const BLOGCOMMENTS = `${BASE_URL}/showblogcomments/`;
 export const DELETECOMMENT = `${BASE_URL}/deletecomment/`;
 export const PROFILE = `${BASE_URL}/profile`;
 export const UPDATEPROFILE = `${BASE_URL}/updateprofile`;
+export const RELATEDPOSTS = `${BASE_URL}/relatedposts/`;

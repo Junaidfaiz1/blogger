@@ -7,6 +7,7 @@ import {
   Outlet,
   RouterProvider,
 } from "react-router-dom";
+import Loading from "./componants/Loading";
 const AboutUsPage = lazy(()=>import( './pages/AboutUs'));
 const ContactUs = lazy(()=>import("./pages/ContactUs")) ;
 const Navbar = lazy(() =>import('./componants/Navbar'));
@@ -19,11 +20,12 @@ const BlogsByCategories = lazy(()=> import('./pages/Categories'))
 const Dashboard = lazy(()=>import('./pages/Dashboard'))
 const CreateBlog = lazy(()=>import('./pages/CreateBlog'))
 const UpdateBlog = lazy(()=> import ('./pages/UpdateBlog'));
-const Profile = lazy(()=>import('./pages/Profile'))
+const Profile = lazy(() => import('./pages/Profile'))
+
 
 const Layout = ()=>{
   return(
-    <Suspense fallback = {"Loading..."}>
+    <Suspense fallback = {<Loading/>}>
     <Navbar/>
     <Outlet/>
     <Footer/>
@@ -33,7 +35,7 @@ const Layout = ()=>{
 }
 const AdminDashboard = ()=>{
   return(
-  <Suspense fallback={"Loading..."}>
+  <Suspense fallback={<Loading />}>
     <Outlet/>
     <ToastContainer/>
   </Suspense>
@@ -44,58 +46,63 @@ const AdminDashboard = ()=>{
 const router = createBrowserRouter([
   {
     path: "/",
-    element:<Layout/>,
-    children:[
+    element: <Layout />,
+    children: [
       {
         path: "/",
-        element:<Home/>,
+        element: <Home />,
       },
       {
         path: "/Login",
-        element:<Login/>,
+        element: <Login />,
       },
       {
         path: "/post/:id",
-        element:<Single/>,
+        element: <Single />,
       },
       {
         path: "/SignUp",
-        element:<SignUp/>,
+        element: <SignUp />,
       },
       {
         path: "/category/:category",
-        element:<BlogsByCategories/>,
+        element: <BlogsByCategories />,
       },
       {
         path: "/AboutUs",
-        element:<AboutUsPage/>,
+        element: <AboutUsPage />,
       },
       {
         path: "/ContactUs",
-        element:<ContactUs/>,
+        element: <ContactUs />,
       },
-    ]
-  },{
+      {
+        path: "/Loading",
+        element: <Loading />,
+      },
+    ],
+  },
+  {
     path: "/Admin",
-    element:<AdminDashboard/>,
-    children:[{
-      path: "/Admin/Dashboard",
-        element:<Dashboard/>,
-    },
-    {
-      path: "/Admin/createblog",
-        element:<CreateBlog/>,
-    },
-    {
-      path: "/Admin/Update/:id",
-      element: <UpdateBlog/>
-    },
-    {
-      path: "/Admin/profile",
-      element: <Profile/>
-    }
-  
-  ]
+    element: <AdminDashboard />,
+    children: [
+      {
+        path: "/Admin/Dashboard",
+        element: <Dashboard />,
+      },
+      {
+        path: "/Admin/createblog",
+        element: <CreateBlog />,
+      },
+      {
+        path: "/Admin/Update/:id",
+        element: <UpdateBlog />,
+      },
+      {
+        path: "/Admin/profile",
+        element: <Profile />,
+      },
+    ],
   },
 ]);
 function App() {
